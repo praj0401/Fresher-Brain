@@ -1,0 +1,67 @@
+# Vercel Web Analytics Implementation
+
+## Summary
+Successfully implemented Vercel Web Analytics for the Fresher Brain project following the latest official documentation from Vercel.
+
+## Project Details
+- **Framework**: Vanilla HTML/JavaScript (static site)
+- **Approach**: CDN-based script injection (no build system required)
+
+## Changes Made
+
+### 1. Modified: `index.html`
+Added Vercel Web Analytics scripts in the `<head>` section:
+- Added initialization script that creates the `window.va` queue function
+- Added deferred loading of the Vercel Analytics script from CDN (`https://cdn.vercel-insights.com/v1/script.js`)
+- Positioned after Google Analytics and before PDF.js for optimal loading
+
+The implementation uses the official CDN approach recommended for static HTML sites without a build system.
+
+### 2. Modified: `vercel.json`
+Updated Content Security Policy (CSP) headers to allow Vercel Analytics:
+- Added `https://cdn.vercel-insights.com` to `script-src` directive to allow loading the analytics script
+- Added `https://vitals.vercel-insights.com` to `connect-src` directive to allow analytics data transmission
+
+These CSP updates are essential for the analytics to function properly while maintaining the site's security posture.
+
+## Implementation Details
+
+### Script Approach
+Used the CDN-based integration recommended by Vercel for static sites:
+```html
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+```
+
+This approach:
+- Requires no package installation or build system
+- Works immediately on any static HTML site
+- Loads analytics script asynchronously with `defer` attribute
+- Creates a queue system that buffers calls until the library loads
+
+## Next Steps
+
+To complete the setup:
+1. **Enable Web Analytics** in the Vercel dashboard:
+   - Navigate to your project's Analytics section
+   - Click the "Enable" button
+   
+2. **Deploy to Vercel**:
+   - Push these changes to your repository
+   - Vercel will automatically deploy the updated site
+   
+3. **Verify Installation**:
+   - After deployment, visit your site
+   - Open browser DevTools → Network tab
+   - Look for requests to `vitals.vercel-insights.com`
+   - Check the Analytics dashboard for incoming data
+
+## Documentation Reference
+Implementation based on the official Vercel documentation:
+- https://vercel.com/docs/analytics/quickstart
+- https://vercel.com/docs/analytics/package
+
+The solution follows Vercel's recommended best practices for static HTML sites, ensuring compatibility and optimal performance.
