@@ -18,14 +18,6 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
-<!-- PDF.js — client-side PDF text extraction, no backend needed -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
-  if (window['pdfjsLib']) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-</script>
-
 <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 :root {
@@ -919,13 +911,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <div>
         <div style="font-size:13px;font-weight:600;margin-bottom:3px;">⚡ Auto-fill from Resume</div>
-        <div style="font-size:12px;color:var(--t3);">Upload PDF/text → AI extracts and fills all fields automatically</div>
+        <div style="font-size:12px;color:var(--t3);">Upload a .md/.txt resume → AI extracts and fills all fields automatically</div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;">
         <div class="drop-zone" id="dropZone" style="padding:14px 20px;display:flex;align-items:center;gap:8px;" onclick="document.getElementById('resumeFile').click()" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
-          <input type="file" id="resumeFile" accept=".pdf,.txt,.md,.doc" style="display:none;" onchange="handleFile(event)">
+          <input type="file" id="resumeFile" accept=".md,.txt" style="display:none;" onchange="handleFile(event)">
           <div class="drop-zone-icon" style="font-size:20px;margin:0;">📂</div>
-          <div style="font-size:12px;">Drop resume or click to upload</div>
+          <div style="font-size:12px;">Drop .md/.txt or click to upload</div>
         </div>
         <button class="btn sec sm" onclick="togglePasteArea()">📋 Paste Text</button>
       </div>
@@ -2508,30 +2500,10 @@ async function processFile(file){
   if(!S.provider){toast('Add API key first','err');return;}
   showParseStatus(`📄 Reading ${file.name}…`,'var(--t3)');
   try{
-    let text = '';
-    if(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      text = await extractPdfText(file);
-    } else {
-      text = await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsText(file);});
-    }
-    if(!text||text.trim().length<30){showParseStatus('⚠️ Could not extract readable text — this may be a scanned/image PDF. Try "Paste Text" instead.','var(--yellow)');return;}
+    const text = await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsText(file);});
+    if(!text||text.trim().length<30){showParseStatus('⚠️ File seems empty or too short. Try "Paste Text" instead.','var(--yellow)');return;}
     await parseResumeFromText(text);
   }catch(e){showParseStatus('❌ '+e.message+' — try "Paste Text" instead.','var(--red)');}
-}
-
-// Extract real text from a PDF file entirely in the browser using PDF.js — no backend, no upload to any server
-async function extractPdfText(file){
-  if(!window.pdfjsLib) throw new Error('PDF reader failed to load — check your connection and try again');
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let fullText = '';
-  for(let i=1; i<=pdf.numPages; i++){
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items.map(item => item.str).join(' ');
-    fullText += pageText + '\n\n';
-  }
-  return fullText.trim();
 }
 
 async function parseResume(){
