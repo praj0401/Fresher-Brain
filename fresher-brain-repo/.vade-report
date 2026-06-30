@@ -1,0 +1,76 @@
+# Vercel Web Analytics Installation Report
+
+## Summary
+Successfully installed and configured Vercel Web Analytics for this static HTML project following the latest official Vercel documentation.
+
+## Changes Made
+
+### 1. Added Vercel Web Analytics to index.html
+**File**: `index.html`
+- Added the Vercel Web Analytics initialization script in the `<head>` section
+- Placed immediately after the existing Google Analytics code for consistency
+- Used the official vanilla HTML/JavaScript implementation method from Vercel docs
+- Implementation includes:
+  - Analytics queue initialization: `window.va` function setup
+  - Deferred script loading from `/_vercel/insights/script.js`
+
+### 2. Updated Content Security Policy (CSP)
+**File**: `vercel.json`
+- Updated the `Content-Security-Policy` header to allow Vercel Analytics scripts
+- Added `https://va.vercel-scripts.com` to both:
+  - `script-src` directive (allows loading analytics scripts)
+  - `connect-src` directive (allows analytics data transmission)
+- This ensures the analytics scripts can load and communicate without being blocked by CSP
+
+## Implementation Details
+
+### Framework Identification
+This project is a **static HTML site** with no build process, no package.json, and no framework dependencies. It's a pure vanilla HTML/CSS/JavaScript application.
+
+### Installation Method
+Per the Vercel Analytics documentation for vanilla HTML sites, I used the script injection method:
+```html
+<script>
+  window.va = window.va || function () { 
+    (window.vaq = window.vaq || []).push(arguments); 
+  };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+```
+
+This method:
+- Does not require npm package installation
+- Works automatically when deployed to Vercel
+- Loads the analytics script asynchronously to avoid blocking page rendering
+- Uses the `/_vercel/insights/script.js` path which is automatically served by Vercel's platform
+
+## Why These Choices
+
+1. **No Package Installation**: Since this is a static HTML site without Node.js dependencies, there's no need to install `@vercel/analytics` via npm. The script-based approach is the recommended method for vanilla HTML projects.
+
+2. **CSP Updates**: The existing CSP was strict and would have blocked the analytics scripts. Adding the Vercel Analytics domains ensures the analytics can function while maintaining security.
+
+3. **Placement**: Analytics scripts were placed in the `<head>` section for early initialization, which is the standard practice for analytics tools.
+
+## Verification
+
+- ✅ HTML structure validated (proper DOCTYPE and closing tags)
+- ✅ Script syntax verified
+- ✅ CSP configuration updated correctly
+- ✅ No build process required (static HTML site)
+- ✅ Changes follow Vercel's official documentation
+
+## Next Steps
+
+After deployment to Vercel:
+1. Enable Web Analytics in the Vercel dashboard (Analytics section in sidebar)
+2. Deploy the changes using `vercel deploy`
+3. Verify analytics is working by checking the browser's Network tab for requests to `/_vercel/insights/`
+4. View analytics data in the Vercel dashboard after user visits accumulate
+
+## Notes
+
+- This implementation is framework-agnostic and works with vanilla HTML
+- The analytics script loads asynchronously (deferred) to maintain page performance
+- No changes to existing functionality were made
+- The implementation follows the latest Vercel Analytics documentation as of June 2026
