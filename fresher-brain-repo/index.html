@@ -769,7 +769,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
 <!-- ░░ COMPANY HUB ░░ -->
 <div class="page" id="page-company">
 <div class="tool-page">
-  <div class="pg-head"><div class="pg-title">🏢 Company Preparation Hub</div><div class="pg-sub">Select a company to get hiring process, interview stages, common questions, tech stack, and preparation tips</div></div>
+  <div class="pg-head"><div class="pg-title">🏢 Company Preparation Hub</div><div class="pg-sub">Pick a company and tell us the exact role — generic guides help no one</div></div>
+  <div class="card">
+    <div class="card-title">Role you're targeting <span style="color:var(--t4);font-weight:400;text-transform:none;letter-spacing:0;">(this makes the guide actually relevant)</span></div>
+    <input class="f-inp" id="compRole" placeholder="e.g. Backend Developer, SDE-1, Data Analyst — be specific" style="margin-top:4px;">
+  </div>
   <div class="comp-grid" id="compGrid"></div>
   <div class="card" id="compCustom">
     <div class="card-title">Other Company</div>
@@ -1220,6 +1224,10 @@ function showPage(id) {
   if(id==='dash') renderDash();
   if(id==='analytics') renderAnalytics();
   if(id==='resumes') renderRVGrid();
+  if(id==='company'){
+    const roleEl = document.getElementById('compRole');
+    if(roleEl && !roleEl.value && S.profile.roles) roleEl.value = S.profile.roles.split(',')[0].trim();
+  }
 }
 
 // ── DASHBOARD ──────────────────────────────────────────
@@ -2092,48 +2100,59 @@ function renderCompGrid(){
 async function prepCompany(name){
   if(!name.trim()){toast('Enter a company name','err');return;}
   if(!S.provider){toast('Add API key first','err');return;}
+
+  // Role is now explicit, not guessed — generic guides happen when this is empty
+  let role = document.getElementById('compRole')?.value.trim();
+  if(!role) role = S.profile.roles?.split(',')[0]?.trim() || '';
+  if(!role){
+    toast('Enter the role you\'re targeting above — generic role = generic guide','err');
+    document.getElementById('compRole')?.focus();
+    return;
+  }
+
   showPage('company');
   const hasSearch = !!S.keys['serper'];
-  document.getElementById('compResult').innerHTML=`<div class="card"><div style="color:var(--t3)">${hasSearch?'🔍 Searching the web for current '+name+' interview info…':'🧠 Generating prep guide…'}</div></div>`;
+  document.getElementById('compResult').innerHTML=`<div class="card"><div style="color:var(--t3)">${hasSearch?'🔍 Searching the web for current '+name+' '+role+' interview info…':'🧠 Generating prep guide for '+role+' at '+name+'…'}</div></div>`;
 
   // Track recents
-  if(!S.recentCompanies.includes(name)){S.recentCompanies.unshift(name);S.recentCompanies=S.recentCompanies.slice(0,5);save();}
+  const recentKey = `${name} — ${role}`;
+  if(!S.recentCompanies.includes(recentKey)){S.recentCompanies.unshift(recentKey);S.recentCompanies=S.recentCompanies.slice(0,5);save();}
 
   // Real web search for current interview experiences — degrades gracefully if no key set
   let searchContext = '';
   let usedSearch = false;
   if(hasSearch) {
-    const results = await webSearch(`${name} interview questions software engineer fresher 2025 2026`, 6);
+    const results = await webSearch(`${name} ${role} interview questions experience 2025 2026`, 6);
     if(results) { searchContext = formatSearchResults(results); usedSearch = true; }
   }
 
-  const prompt=`Create a comprehensive interview preparation guide for ${name} for a ${S.profile.roles||'software engineering'} fresher role.
-${searchContext ? 'Use the live web search results below as your primary source for current questions and process — cite specifics from them where relevant.' : 'Note: no live web search was available, so base this on general knowledge of how companies at this tier typically interview — be clear this is general guidance, not company-confirmed specifics.'}
+  const prompt=`Create a comprehensive interview preparation guide for a ${role} role at ${name}. This MUST be specific to ${role} — not a generic "software engineering" guide. If ${role} is a non-technical role (e.g. sales, marketing, ops, design), do not include DSA/coding sections; tailor every section to what that role actually involves.
+${searchContext ? 'Use the live web search results below as your primary source for current questions and process — cite specifics from them where relevant.' : `Note: no live web search was available, so base this on general knowledge of how companies at ${name}'s tier typically interview for ${role} roles — be clear this is general guidance, not company-confirmed specifics.`}
 
-Include these sections:
+Include these sections, all specific to ${role}:
 ## Company Overview
-## Hiring Process (step by step)
+## Hiring Process for ${role} (step by step)
 ## Interview Stages & What to Expect
-## Frequently Asked Interview Questions (at least 8, mix of HR and technical)
-## Technical Topics to Prepare
+## Frequently Asked Interview Questions for ${role} (at least 8, mix of HR and role-specific)
+## Core Skills/Topics to Prepare for ${role}
 ## Behavioral Topics to Prepare
 ## Expected Difficulty Level
-## Current Tech Stack
-## Resume Tips for ${name}
+## What ${name} Looks For in ${role} Candidates
+## Resume Tips Specific to ${role} at ${name}
 ## Company-Specific Advice (culture, what they value, what to emphasize)
 
 Candidate background: ${buildResumeText().substring(0,300)}
 ${searchContext}
-Make it specific and actionable.`;
+Make every section concrete and actionable for ${role} specifically — not generic engineering advice unless ${role} actually is an engineering role.`;
 
   try {
-    const r=await callAI([{role:'user',content:prompt}],`You are an expert career coach researching ${name}'s hiring process. ${usedSearch?'You have live web search results — ground your answer in them and mention when info comes from recent sources.':'Be upfront that without live search, some details are general patterns rather than confirmed current specifics.'}`);
+    const r=await callAI([{role:'user',content:prompt}],`You are an expert career coach researching ${name}'s hiring process specifically for ${role} roles. ${usedSearch?'You have live web search results — ground your answer in them and mention when info comes from recent sources.':'Be upfront that without live search, some details are general patterns rather than confirmed current specifics.'} Never default to generic software engineering content if the role is something else.`);
     document.getElementById('compResult').innerHTML=`
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:15px;font-weight:700;">🏢 ${name} Prep Guide</div>
+          <div style="font-size:15px;font-weight:700;">🏢 ${name} — ${role} Prep Guide</div>
           <div style="display:flex;gap:7px;">
-            <button class="btn sec sm" onclick="startMockForCompany('${name}')">🎯 Mock Interview</button>
+            <button class="btn sec sm" onclick="startMockForCompanyRole('${name.replace(/'/g,"\\'")}','${role.replace(/'/g,"\\'")}')">🎯 Mock Interview</button>
             <button class="btn sec sm" onclick="copyResult('compResultContent')">Copy</button>
           </div>
         </div>
@@ -2146,6 +2165,12 @@ Make it specific and actionable.`;
 
 function startMockForCompany(name){
   document.getElementById('mkCo').value=name;
+  showPage('mock');
+}
+
+function startMockForCompanyRole(name, role){
+  document.getElementById('mkCo').value=name;
+  if(role) document.getElementById('mkRole').value=role;
   showPage('mock');
 }
 
