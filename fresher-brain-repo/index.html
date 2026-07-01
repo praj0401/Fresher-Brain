@@ -471,6 +471,89 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
   .pipe-board{grid-template-columns:repeat(3,1fr);}
   .nav .nb{font-size:10px;padding:4px 7px;}
 }
+
+/* ── PRINT / PDF EXPORT ── */
+@media print {
+  /* Hide everything except the resume doc */
+  body > *:not(#printTarget) { display: none !important; }
+  #printTarget {
+    display: block !important;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 99999;
+    background: #fff;
+  }
+  @page {
+    size: letter;
+    margin: 0.5in 0.6in;
+  }
+}
+
+/* ── RESUME DOC STYLES (scoped to #resumeDoc) ── */
+#resumeDoc {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 11pt;
+  color: #000;
+  background: #fff;
+  padding: 28px 32px;
+  line-height: 1.35;
+  min-height: 11in;
+  width: 8.5in;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+#resumeDoc .r-name {
+  text-align: center;
+  font-size: 22pt;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+#resumeDoc .r-contact {
+  text-align: center;
+  font-size: 9.5pt;
+  color: #333;
+  margin-bottom: 6px;
+}
+#resumeDoc .r-contact a { color: #000; text-decoration: underline; }
+#resumeDoc .r-section {
+  font-size: 11.5pt;
+  font-weight: 700;
+  font-variant: small-caps;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 10px 0 3px;
+  padding-bottom: 2px;
+  border-bottom: 1.2px solid #000;
+}
+#resumeDoc .r-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1px;
+}
+#resumeDoc .r-row-left { font-weight: 700; font-size: 10.5pt; }
+#resumeDoc .r-row-right { font-size: 9.5pt; font-style: italic; white-space: nowrap; }
+#resumeDoc .r-row-sub { font-size: 9.5pt; font-style: italic; }
+#resumeDoc ul {
+  margin: 2px 0 4px 18px;
+  padding: 0;
+}
+#resumeDoc li {
+  font-size: 10pt;
+  margin-bottom: 1.5px;
+  line-height: 1.4;
+  list-style-type: disc;
+}
+#resumeDoc .r-skills-row { font-size: 10pt; margin-bottom: 3px; }
+#resumeDoc .r-skills-row b { font-weight: 700; }
+#resumeDoc .r-summary { font-size: 10pt; margin: 2px 0 4px; line-height: 1.5; }
+#resumeDoc .r-proj-title { font-weight: 700; font-size: 10.5pt; }
+#resumeDoc .r-cert-item { font-size: 10pt; margin-bottom: 2px; }
+#resumeDoc .r-cert-item::before { content: "• "; }
 </style>
 </head>
 <body>
@@ -523,6 +606,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
     <button class="nb" onclick="showPage('mock')">🎯 Interview</button>
     <button class="nb" onclick="showPage('company')">🏢 Companies</button>
     <button class="nb" onclick="showPage('jobs')">💼 Jobs</button>
+    <button class="nb" onclick="showPage('builder')">🏗️ Resume Builder</button>
     <button class="nb" onclick="showPage('tracker')">📊 Tracker</button>
     <button class="nb" onclick="showPage('profile')">👤 Profile</button>
   </div>
@@ -557,6 +641,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
   <div class="si" onclick="showPage('jobs')"><span class="si-icon">💼</span>Job Matches</div>
   <div class="si" onclick="showPage('network')"><span class="si-icon">🤝</span>Networking</div>
   <div class="si" onclick="showPage('resumes')"><span class="si-icon">📄</span>Resume Versions</div>
+  <div class="si" onclick="showPage('builder')"><span class="si-icon">🏗️</span>Resume Builder</div>
   <div class="sb-div"></div>
   <div class="si" onclick="clearCurrentChat()"><span class="si-icon">🗑️</span>Clear Chat</div>
   <div class="sb-footer" id="sbFooter"></div>
@@ -718,16 +803,40 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
 <!-- ░░ MOCK INTERVIEW ░░ -->
 <div class="page" id="page-mock">
   <div class="tool-page" id="mockSetup">
-    <div class="pg-head"><div class="pg-title">🎯 Mock Interview</div><div class="pg-sub">Resume-aware, JD-specific, unique every session. Scored on 4 dimensions per answer.</div></div>
+    <div class="pg-head"><div class="pg-title">🎯 Mock Interview</div><div class="pg-sub">Resume-aware, JD-specific, unique every session. Scored on 4 dimensions per answer. Works for any role.</div></div>
     <div class="two-col">
       <div class="card">
         <div class="card-title">Round Type</div>
-        <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="hr" checked style="accent-color:var(--p)"> HR / Behavioural</label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="tech" style="accent-color:var(--p)"> Technical (DSA + CS)</label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="mixed" style="accent-color:var(--p)"> Mixed Round</label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="system" style="accent-color:var(--p)"> System Design (Entry)</label>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.8px;color:var(--t4);margin:6px 0 5px;text-transform:uppercase;">Universal</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="hr" checked style="accent-color:var(--p)"> 💬 HR / Behavioural</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="mixed" style="accent-color:var(--p)"> 🔀 Mixed (HR + Domain)</label>
         </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.8px;color:var(--t4);margin:10px 0 5px;text-transform:uppercase;">Tech Roles</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="tech" style="accent-color:var(--p)"> 💻 Technical (DSA + CS)</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="system" style="accent-color:var(--p)"> 🏗️ System Design (Entry)</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="data" style="accent-color:var(--p)"> 📊 Data Science / Analytics</label>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.8px;color:var(--t4);margin:10px 0 5px;text-transform:uppercase;">Business & Strategy</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="pm" style="accent-color:var(--p)"> 🧩 Product Management</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="ba" style="accent-color:var(--p)"> 📋 Business Analyst</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="consulting" style="accent-color:var(--p)"> 🎯 Consulting (Case + Guesstimates)</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="finance" style="accent-color:var(--p)"> 💹 Finance / Banking</label>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.8px;color:var(--t4);margin:10px 0 5px;text-transform:uppercase;">Other Domains</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="sales" style="accent-color:var(--p)"> 🤝 Sales / Business Development</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="marketing" style="accent-color:var(--p)"> 📣 Marketing / Growth</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="ops" style="accent-color:var(--p)"> ⚙️ Operations / Supply Chain</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--t2);"><input type="radio" name="mockType" value="design" style="accent-color:var(--p)"> 🎨 UI/UX Design</label>
+        </div>
+
         <div style="margin-top:13px;">
           <div class="card-title">Questions</div>
           <div style="display:flex;gap:5px;margin-top:5px;">
@@ -887,6 +996,115 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
   </div>
   <div id="rvCompare" style="display:none;margin-top:14px;">
     <div class="two-col" id="rvCompareGrid"></div>
+  </div>
+</div>
+</div>
+
+<!-- ░░ RESUME BUILDER ░░ -->
+<div class="page" id="page-builder">
+<div class="tool-page">
+  <div class="pg-head">
+    <div class="pg-title">📄 Resume Builder</div>
+    <div class="pg-sub">ATS-optimized single-column layout — the same format used in Jake's Resume template. Auto-filled from your profile.</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <button class="btn" onclick="buildResume()">⚡ Build from Profile</button>
+    <button class="btn sec" onclick="improveResume()">✨ AI Improve Bullets</button>
+    <button class="btn sec" onclick="printResume()">📥 Download PDF</button>
+    <div style="font-size:11px;color:var(--t3);margin-left:4px;">Print dialog → Save as PDF → set margins to None</div>
+  </div>
+
+  <!-- Two-panel: editor left, preview right -->
+  <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:14px;flex:1;">
+
+    <!-- LEFT: Section editors -->
+    <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:72vh;">
+
+      <div class="card">
+        <div class="card-title">Contact</div>
+        <div class="p-field"><label class="p-lbl">Full Name</label><input class="p-inp" id="rb-name" placeholder="Prajwal R" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Location</label><input class="p-inp" id="rb-location" placeholder="Bengaluru, Karnataka" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Phone</label><input class="p-inp" id="rb-phone" placeholder="+91-9353745249" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Email</label><input class="p-inp" id="rb-email" placeholder="you@gmail.com" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">LinkedIn URL</label><input class="p-inp" id="rb-linkedin" placeholder="linkedin.com/in/yourprofile" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">GitHub URL</label><input class="p-inp" id="rb-github" placeholder="github.com/yourusername" oninput="liveRender()"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Summary</div>
+        <textarea class="p-ta" id="rb-summary" rows="4" placeholder="Final-year Computer Science student with..." oninput="liveRender()"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Education</div>
+        <div class="p-field"><label class="p-lbl">College & Degree</label><input class="p-inp" id="rb-college" placeholder="AMC Engineering College — B.E. in Computer Science" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Duration</label><input class="p-inp" id="rb-edu-date" placeholder="December 2022 – June 2026 (Expected)" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">GPA / Percentage & Location</label><input class="p-inp" id="rb-gpa" placeholder="GPA: 8.1/10 | Bengaluru, Karnataka" oninput="liveRender()"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Technical Skills</div>
+        <div class="p-field"><label class="p-lbl">Languages</label><input class="p-inp" id="rb-langs" placeholder="Java, Python, JavaScript, HTML, CSS" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Frameworks / Tools</label><input class="p-inp" id="rb-tools" placeholder="React.js, Node.js, Express.js, MongoDB, SQL" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Soft Skills</label><input class="p-inp" id="rb-soft" placeholder="Leadership, Public Speaking, Adaptability" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Other (AI tools, platforms, etc.)</label><input class="p-inp" id="rb-other" placeholder="HubSpot, Apollo.io, ChatGPT, Claude" oninput="liveRender()"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Experience / Internships</div>
+        <div class="p-field"><label class="p-lbl">Company & Role</label><input class="p-inp" id="rb-exp1-co" placeholder="Vitra.ai — Founder's Office Intern" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Duration</label><input class="p-inp" id="rb-exp1-date" placeholder="May 2026 – Present" oninput="liveRender()"></div>
+        <div class="p-field"><label class="p-lbl">Bullets (one per line)</label>
+          <textarea class="p-ta" id="rb-exp1-bullets" rows="3" placeholder="Built Fresher Brain, an AI career OS used by freshers across India&#10;Managed end-to-end product from ideation to deployment on Vercel" oninput="liveRender()"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Projects</div>
+        <div id="rb-projects-wrap">
+          <div class="rb-project" id="rb-proj-0">
+            <div class="p-field"><label class="p-lbl">Project 1 — Name & Tech Stack</label><input class="p-inp" class="rb-proj-name" placeholder="Hire-Stream — React, Node.js, MongoDB, JWT" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Bullets (one per line)</label><textarea class="p-ta rb-proj-bullets" rows="2" placeholder="Built end-to-end recruitment platform for students, recruiters, and admins&#10;Integrated REST APIs, JWT auth, and cloud storage" oninput="liveRender()"></textarea></div>
+          </div>
+          <div class="rb-project" id="rb-proj-1" style="margin-top:8px;">
+            <div class="p-field"><label class="p-lbl">Project 2 — Name & Tech Stack</label><input class="p-inp" class="rb-proj-name" placeholder="Food Delivery App — React, Express, MongoDB" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Bullets (one per line)</label><textarea class="p-ta rb-proj-bullets" rows="2" placeholder="Real-time order tracking, admin dashboard, cart management&#10;MVC architecture with RESTful APIs for scalability" oninput="liveRender()"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Achievements & Leadership</div>
+        <textarea class="p-ta" id="rb-achievements" rows="4" placeholder="Best Paper Presentation — National Technical Symposium&#10;Won for 'Edge-Deployable LSTM-Based Fall Detection on ESP32'&#10;Presented to panel of judges demonstrating structured communication" oninput="liveRender()"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Certifications</div>
+        <textarea class="p-ta" id="rb-certs" rows="3" placeholder="Inbound Sales Certified — HubSpot Academy (May 2026)&#10;Problem Solving Basic — HackerRank (Nov 2025)&#10;Python Basic — HackerRank (Jul 2025)" oninput="liveRender()"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Custom Section (optional)</div>
+        <div class="p-field"><label class="p-lbl">Section Title</label><input class="p-inp" id="rb-custom-title" placeholder="What I Bring to a Business Development Role" oninput="liveRender()"></div>
+        <textarea class="p-ta" id="rb-custom-body" rows="4" placeholder="Comfort with ambiguity and fast iteration&#10;High initiative — all projects pursued independently&#10;Strong written communication for varied audiences" oninput="liveRender()"></textarea>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Live preview -->
+    <div style="position:sticky;top:0;height:fit-content;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--t3);">Live Preview</div>
+        <span class="tag g" style="font-size:10px;">ATS-Safe · Single Column</span>
+      </div>
+      <!-- The actual resume preview — this is what gets printed -->
+      <div id="resumePreview" style="background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.5);">
+        <div id="resumeDoc"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -1226,7 +1444,7 @@ function showPage(id) {
   document.querySelectorAll('.nb').forEach(b=>{
     const t = b.textContent.toLowerCase();
     if(id==='dash'&&t.includes('home')) b.classList.add('on');
-    else if(id!=='dash'&&t.includes(id==='jd'?'jd':id==='mock'?'interview':id==='company'?'compan':id==='jobs'?'jobs':id==='network'?'network':id==='tracker'?'tracker':id==='resumes'?'resumes':id==='analytics'?'analytics':id==='profile'?'profile':id==='settings'?'settings':'__')) b.classList.add('on');
+    else if(id!=='dash'&&t.includes(id==='jd'?'jd':id==='mock'?'interview':id==='company'?'compan':id==='jobs'?'jobs':id==='network'?'network':id==='tracker'?'tracker':id==='resumes'?'resumes':id==='builder'?'builder':id==='analytics'?'analytics':id==='profile'?'profile':id==='settings'?'settings':'__')) b.classList.add('on');
   });
   if(id==='jd') document.getElementById('jdResume').value = buildResumeText();
   if(id==='dash') renderDash();
@@ -1236,6 +1454,7 @@ function showPage(id) {
     const roleEl = document.getElementById('compRole');
     if(roleEl && !roleEl.value && S.profile.roles) roleEl.value = S.profile.roles.split(',')[0].trim();
   }
+  if(id==='builder') buildResume();
 }
 
 // ── DASHBOARD ──────────────────────────────────────────
@@ -1906,7 +2125,7 @@ async function startMock() {
   const role=document.getElementById('mkRole').value.trim();
   const jd=document.getElementById('mkJD').value.trim();
   const seed=Math.random().toString(36).substring(2,7);
-  S.mockState={active:true,type,company,role,jd,qCount:mockQCount,qNum:0,scores:[],msgs:[],questions:[],seed};
+  S.mockState={active:true,type,company,role,jd,qCount:mockQCount,qNum:0,scores:[],msgs:[],questions:[],seed,typeLabel};
 
   document.getElementById('mockSetup').style.display='none';
   const ma=document.getElementById('mockActive');ma.style.display='flex';
@@ -1914,7 +2133,21 @@ async function startMock() {
   document.getElementById('mockMsgs').innerHTML='';
   updateMockProg();
 
-  const typeLabel={hr:'HR/behavioural',tech:'technical (DSA, algorithms, CS fundamentals)',mixed:'mixed HR and technical',system:'entry-level system design'}[type];
+  const typeLabel={
+    hr:         'HR and behavioural — focus on STAR-format answers, cultural fit, motivation, strengths/weaknesses, teamwork, conflict resolution',
+    mixed:      'mixed HR and domain-specific — blend of behavioural questions and technical/role-specific questions relevant to their background',
+    tech:       'technical — DSA (arrays, strings, trees, graphs, DP), algorithms, time/space complexity, CS fundamentals (OS, DBMS, networks, OOP)',
+    system:     'entry-level system design — design simple systems (URL shortener, notification service, chat app), scalability basics, databases, APIs',
+    data:       'data science and analytics — SQL queries, statistics, probability, ML concepts (bias/variance, overfitting, model evaluation), case studies with data, Python/pandas basics',
+    pm:         'product management — product sense (favourite product + improvements), prioritization frameworks, metrics definition, go-to-market, user research, feature design, case studies',
+    ba:         'business analyst — requirement gathering, process mapping, stakeholder management, use case writing, gap analysis, data interpretation, basic SQL',
+    consulting: 'consulting — case interviews (market sizing, profitability, market entry), guesstimation, structured problem solving, hypothesis-driven thinking, MECE framework',
+    finance:    'finance and banking — financial statements, ratio analysis, valuation basics (DCF, comparables), time value of money, capital markets, Excel modelling concepts',
+    sales:      'sales and business development — cold outreach, objection handling, sales funnel, pitch delivery, negotiation, CRM basics, customer needs discovery',
+    marketing:  'marketing and growth — campaign thinking, target audience definition, channel strategy, growth hacking, brand positioning, content marketing, analytics metrics (CAC, LTV, CTR)',
+    ops:        'operations and supply chain — process optimization, root cause analysis, inventory management, logistics basics, lean/six sigma concepts, problem solving with data',
+    design:     'UI/UX design — portfolio walkthrough, design critique, user research methods, wireframing process, accessibility, design systems, how you made key design decisions',
+  }[type] || 'general professional — mix of HR, role-specific, and situational questions';
   const hasSearch = !!S.keys['serper'];
   const ty=addMockMsg('ai',`<div style="color:var(--t3);font-size:12.5px;">🧠 Parsing resume…<br>${jd?'🔍 Analyzing JD for gaps…':''}${hasSearch&&company?'<br>🌐 Searching real '+company+' interview questions…':''}<br>✨ Generating unique questions (${seed})…</div>`);
 
@@ -1968,8 +2201,28 @@ async function submitAnswer() {
   document.getElementById('mkSendBtn').disabled=true;
   const ty=addMockMsg('ai','<div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>');
 
-  const fbPrompt=`Evaluate this interview answer as a senior ${S.mockState.company||'tech'} interviewer.
+  // Dimension 2 adapts per round type — STAR is only relevant for behavioural answers
+  const dim2Label = {
+    hr:       'STAR_METHOD: [1-5] — [did they use Situation/Task/Action/Result?]',
+    mixed:    'STAR_METHOD: [1-5] — [did they use STAR for behavioural parts?]',
+    tech:     'TECHNICAL_ACCURACY: [1-5] — [was the technical content correct and precise?]',
+    system:   'TECHNICAL_ACCURACY: [1-5] — [did they cover scalability, trade-offs, components clearly?]',
+    data:     'TECHNICAL_ACCURACY: [1-5] — [was the data/stats/ML reasoning correct?]',
+    pm:       'STRUCTURE: [1-5] — [did they use a clear framework — problem, metrics, solution, trade-offs?]',
+    ba:       'STRUCTURE: [1-5] — [was the answer structured with clear requirements and logic?]',
+    consulting:'STRUCTURE: [1-5] — [was the case structured — hypothesis, framework, analysis, recommendation?]',
+    finance:  'TECHNICAL_ACCURACY: [1-5] — [was financial reasoning and terminology correct?]',
+    sales:    'PERSUASIVENESS: [1-5] — [was the answer compelling, confident, and customer-centric?]',
+    marketing:'STRUCTURE: [1-5] — [did they cover audience, channel, metric, and reasoning clearly?]',
+    ops:      'STRUCTURE: [1-5] — [did they approach the problem systematically with data?]',
+    design:   'DESIGN_THINKING: [1-5] — [did they show user empathy, iteration, and clear rationale?]',
+  }[S.mockState.type] || 'STAR_METHOD: [1-5] — [did they use Situation/Task/Action/Result?]';
 
+  const dim2Display = dim2Label.split(':')[0]; // e.g. "TECHNICAL_ACCURACY"
+
+  const fbPrompt=`Evaluate this interview answer as a senior ${S.mockState.company||'professional'} interviewer for a ${S.mockState.role||'fresher'} role.
+
+ROUND TYPE: ${S.mockState.type} — ${S.mockState.typeLabel||'general'}
 QUESTION: ${curQ}
 ANSWER: ${ans}
 CANDIDATE BACKGROUND: ${buildResumeText().substring(0,400)}
@@ -1977,14 +2230,14 @@ ${S.mockState.jd?'JD CONTEXT: '+S.mockState.jd.substring(0,200):''}
 
 Return in this EXACT format:
 OVERALL_SCORE: [1-10]
-CLARITY: [1-5] — [specific one-line feedback]
-STAR_METHOD: [1-5] — [did they use Situation/Task/Action/Result?]
-RELEVANCE: [1-5] — [was it relevant to the role?]
-DEPTH: [1-5] — [did they go deep enough?]
+CLARITY: [1-5] — [specific one-line feedback on how clearly they communicated]
+${dim2Label}
+RELEVANCE: [1-5] — [was it relevant to the role and question?]
+DEPTH: [1-5] — [did they go deep enough or stay surface-level?]
 WHAT_WORKED: [1 sentence on what was genuinely good]
 WHAT_MISSED: [1 sentence on the biggest gap]
-BETTER_ANSWER: [3-4 sentence model answer specific to their background]
-FOLLOW_UP: [One sharp follow-up a real interviewer would ask]`;
+BETTER_ANSWER: [3-4 sentence model answer specific to their background and this round type]
+FOLLOW_UP: [One sharp follow-up a real interviewer would ask based on their answer]`;
 
   try {
     const fb=await callAI([{role:'user',content:fbPrompt}],'Rigorous but fair interviewer. Be specific. Reference their actual words.');
@@ -2027,10 +2280,16 @@ function renderFbCard(fb) {
   const cls=score>=7?'good':score>=5?'ok':'bad';
   const stars=(n)=>'★'.repeat(Math.min(5,Math.round(parseInt(n)||3)))+'☆'.repeat(5-Math.min(5,Math.round(parseInt(n)||3)));
   const ww=get('WHAT_WORKED'),wm=get('WHAT_MISSED'),ba=get('BETTER_ANSWER');
+
+  // Detect which dimension 2 was actually used (varies by round type)
+  const dim2Options = ['STAR_METHOD','TECHNICAL_ACCURACY','STRUCTURE','PERSUASIVENESS','DESIGN_THINKING'];
+  const dim2Key = dim2Options.find(k => fb.includes(k+':')) || 'STAR_METHOD';
+  const dim2Display = dim2Key.replace(/_/g,' ');
+
   return `<div class="fb-card">
     <div class="fb-head"><div class="fb-sc ${cls}">${score}/10</div><div class="fb-title">${score>=7?'Strong ✓':score>=5?'Needs polish':'Needs work'}</div></div>
     <div class="fb-dims">
-      ${['CLARITY','STAR_METHOD','RELEVANCE','DEPTH'].map(k=>`<div class="fb-dim"><span class="fb-dl">${k.replace('_',' ')}</span><span class="fb-stars">${stars(get(k).split(' ')[0])}</span><span class="fb-note">${get(k).split('—')[1]||''}</span></div>`).join('')}
+      ${['CLARITY', dim2Key, 'RELEVANCE','DEPTH'].map(k=>`<div class="fb-dim"><span class="fb-dl">${k===dim2Key?dim2Display:k.replace('_',' ')}</span><span class="fb-stars">${stars(get(k).split(' ')[0])}</span><span class="fb-note">${get(k).split('—')[1]||''}</span></div>`).join('')}
     </div>
     ${ww!=='—'?`<div class="fb-good">✓ ${ww}</div>`:''}
     <div class="fb-tip">${wm!=='—'?`⚠️ ${wm}<br><br>`:''}${ba!=='—'?`<strong style="color:var(--p2)">Stronger answer:</strong> ${ba}`:''}</div>
@@ -2739,6 +2998,238 @@ function toast(msg,type='ok'){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className=`toast on ${type}`;
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600);
+}
+
+// ── RESUME BUILDER ──────────────────────────────────────
+// Replicates Jake's Resume / Overleaf single-column ATS format exactly.
+// Auto-fills from profile, live-renders on every keystroke, print-to-PDF for export.
+
+function buildResume() {
+  const p = S.profile;
+  // Auto-fill fields from profile — only if field is empty (don't overwrite manual edits)
+  const fill = (id, val) => { const el = document.getElementById(id); if(el && !el.value && val) el.value = val; };
+
+  // Parse links from profile
+  const links = p.links || '';
+  const liLinked = links.match(/linkedin\.com\/in\/([^\s|]+)/i);
+  const liGithub = links.match(/github\.com\/([^\s|]+)/i);
+
+  fill('rb-name', p.name || '');
+  fill('rb-location', p.location?.split('(')[0].trim() || '');
+  fill('rb-email', '');
+  fill('rb-linkedin', liLinked ? 'linkedin.com/in/'+liLinked[1].replace(/[|,]/g,'').trim() : '');
+  fill('rb-github', liGithub ? 'github.com/'+liGithub[1].replace(/[|,]/g,'').trim() : '');
+  fill('rb-college', p.college || '');
+  fill('rb-gpa', p.cgpa ? `GPA: ${p.cgpa}` : '');
+  fill('rb-langs', p.skills || '');
+  fill('rb-tools', p.tools || '');
+  fill('rb-soft', '');
+  fill('rb-other', '');
+  fill('rb-summary', p.resume?.substring(0, 300) || '');
+  fill('rb-achievements', p.wins || '');
+  fill('rb-certs', p.certs || '');
+
+  // Parse projects from profile.projects
+  if(p.projects) {
+    const projLines = p.projects.split('\n').filter(Boolean);
+    const proj0Name = document.querySelector('#rb-proj-0 .p-inp');
+    const proj0Bullets = document.querySelector('#rb-proj-0 .p-ta');
+    const proj1Name = document.querySelector('#rb-proj-1 .p-inp');
+    const proj1Bullets = document.querySelector('#rb-proj-1 .p-ta');
+    if(proj0Name && !proj0Name.value && projLines[0]) proj0Name.value = projLines[0];
+    if(proj1Name && !proj1Name.value && projLines[1]) proj1Name.value = projLines[1];
+  }
+
+  liveRender();
+}
+
+function liveRender() {
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const name     = g('rb-name');
+  const location = g('rb-location');
+  const phone    = g('rb-phone');
+  const email    = g('rb-email');
+  const linkedin = g('rb-linkedin');
+  const github   = g('rb-github');
+  const summary  = g('rb-summary');
+  const college  = g('rb-college');
+  const eduDate  = g('rb-edu-date');
+  const gpa      = g('rb-gpa');
+  const langs    = g('rb-langs');
+  const tools    = g('rb-tools');
+  const soft     = g('rb-soft');
+  const other    = g('rb-other');
+  const exp1Co   = g('rb-exp1-co');
+  const exp1Date = g('rb-exp1-date');
+  const exp1Bul  = g('rb-exp1-bullets');
+  const achievements = g('rb-achievements');
+  const certs    = g('rb-certs');
+  const customTitle = g('rb-custom-title');
+  const customBody  = g('rb-custom-body');
+
+  // Projects
+  const projNames   = document.querySelectorAll('.rb-proj-name');
+  const projBullets = document.querySelectorAll('.rb-proj-bullets');
+
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const bullets = text => text.split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('');
+  const skillRow = (label, val) => val ? `<div class="r-skills-row"><b>${esc(label)}:</b> ${esc(val)}</div>` : '';
+
+  // Contact line
+  const contactParts = [];
+  if(phone)    contactParts.push(`<a href="tel:${esc(phone)}">${esc(phone)}</a>`);
+  if(email)    contactParts.push(`<a href="mailto:${esc(email)}">${esc(email)}</a>`);
+  if(linkedin) contactParts.push(`<a href="https://${esc(linkedin)}" target="_blank">${esc(linkedin)}</a>`);
+  if(github)   contactParts.push(`<a href="https://${esc(github)}" target="_blank">${esc(github)}</a>`);
+
+  let html = '';
+
+  // Header
+  html += `<div class="r-name">${esc(name||'Your Name')}</div>`;
+  if(location) html += `<div class="r-contact">${esc(location)}</div>`;
+  if(contactParts.length) html += `<div class="r-contact">${contactParts.join(' &nbsp;|&nbsp; ')}</div>`;
+
+  // Summary
+  if(summary) {
+    html += `<div class="r-section">Summary</div>`;
+    html += `<div class="r-summary">${esc(summary)}</div>`;
+  }
+
+  // Education
+  if(college || eduDate) {
+    html += `<div class="r-section">Education</div>`;
+    const [collegeName, degree] = college.includes('—') ? college.split('—') : [college, ''];
+    html += `<div class="r-row"><span class="r-row-left">${esc(collegeName?.trim()||college)}</span><span class="r-row-right">${esc(eduDate)}</span></div>`;
+    if(degree||gpa) html += `<div class="r-row"><span class="r-row-sub">${esc(degree?.trim()||'')}${gpa?' — '+esc(gpa):''}</span></div>`;
+  }
+
+  // Skills
+  if(langs||tools||soft||other) {
+    html += `<div class="r-section">Technical Skills</div>`;
+    html += skillRow('Languages', langs);
+    html += skillRow('Frameworks & Tools', tools);
+    html += skillRow('Soft Skills', soft);
+    html += skillRow('Other', other);
+  }
+
+  // Experience
+  if(exp1Co) {
+    html += `<div class="r-section">Experience</div>`;
+    const [co, role] = exp1Co.includes('—') ? exp1Co.split('—') : [exp1Co, ''];
+    html += `<div class="r-row"><span class="r-row-left">${esc(co?.trim())}</span><span class="r-row-right">${esc(exp1Date)}</span></div>`;
+    if(role) html += `<div class="r-row-sub">${esc(role.trim())}</div>`;
+    if(exp1Bul) html += `<ul>${bullets(exp1Bul)}</ul>`;
+  }
+
+  // Projects
+  const projSections = [];
+  projNames.forEach((nameEl, i) => {
+    const pname = nameEl.value.trim();
+    const pbul = projBullets[i]?.value.trim() || '';
+    if(pname || pbul) {
+      const [title, tech] = pname.includes('—') ? pname.split('—') : [pname, ''];
+      projSections.push(`<div class="r-row"><span class="r-proj-title">${esc(title?.trim()||pname)}${tech?' <span style="font-weight:400;font-style:italic;">| '+esc(tech.trim())+'</span>':''}</span></div>${pbul?'<ul>'+bullets(pbul)+'</ul>':''}`);
+    }
+  });
+  if(projSections.length) {
+    html += `<div class="r-section">Projects</div>`;
+    html += projSections.join('<div style="height:4px;"></div>');
+  }
+
+  // Achievements
+  if(achievements) {
+    html += `<div class="r-section">Achievements &amp; Leadership</div>`;
+    html += `<ul>${bullets(achievements)}</ul>`;
+  }
+
+  // Certifications
+  if(certs) {
+    html += `<div class="r-section">Certifications</div>`;
+    certs.split('\n').filter(l=>l.trim()).forEach(c => {
+      html += `<div class="r-cert-item">${esc(c.trim())}</div>`;
+    });
+  }
+
+  // Custom section
+  if(customTitle && customBody) {
+    html += `<div class="r-section">${esc(customTitle)}</div>`;
+    html += `<ul>${bullets(customBody)}</ul>`;
+  }
+
+  document.getElementById('resumeDoc').innerHTML = html;
+}
+
+function printResume() {
+  // Wrap the resume in a dedicated print target so @media print can isolate it
+  const existing = document.getElementById('printTarget');
+  if(existing) existing.remove();
+  const clone = document.getElementById('resumeDoc').cloneNode(true);
+  const wrap = document.createElement('div');
+  wrap.id = 'printTarget';
+  wrap.style.cssText = 'display:none;background:#fff;';
+  const inner = document.createElement('div');
+  inner.id = 'resumeDoc';
+  inner.innerHTML = clone.innerHTML;
+  wrap.appendChild(inner);
+  document.body.appendChild(wrap);
+  window.print();
+  // Clean up after print dialog closes
+  setTimeout(() => { const el = document.getElementById('printTarget'); if(el) el.remove(); }, 2000);
+}
+
+async function improveResume() {
+  if(!S.provider){ toast('Add API key first','err'); return; }
+  const currentResume = document.getElementById('resumeDoc')?.innerText || '';
+  if(!currentResume.trim()){ toast('Build your resume first','err'); return; }
+  toast('✨ AI improving bullets…','info');
+
+  const prompt = `You are an expert resume writer. Improve the bullet points in this resume to be more impactful, quantified, and ATS-optimized. Rules:
+- Start every bullet with a strong action verb
+- Add metrics/numbers wherever plausible (use realistic estimates if not given)
+- Keep each bullet under 2 lines
+- Remove filler words
+- Preserve all facts — only improve language
+
+For each section with bullets, output the improved bullets as:
+SECTION: [section name]
+BULLETS:
+- [improved bullet]
+- [improved bullet]
+
+Resume:
+${currentResume.substring(0, 2000)}`;
+
+  try {
+    const r = await callAI([{role:'user',content:prompt}], 'Expert resume writer. Return only the improved bullets per section.');
+    // Parse and apply improvements
+    const sections = r.split(/SECTION:/g).filter(Boolean);
+    sections.forEach(block => {
+      const lines = block.split('\n').filter(Boolean);
+      const sectionName = lines[0]?.trim().toLowerCase() || '';
+      const bulletsStart = block.indexOf('BULLETS:');
+      if(bulletsStart === -1) return;
+      const newBullets = block.substring(bulletsStart + 8).split('\n')
+        .map(l => l.replace(/^[-•]\s*/, '').trim()).filter(Boolean).join('\n');
+
+      // Map section names to textarea IDs
+      if(sectionName.includes('experience') || sectionName.includes('intern')) {
+        const el = document.getElementById('rb-exp1-bullets');
+        if(el) el.value = newBullets;
+      } else if(sectionName.includes('project') || sectionName.includes('proj 1') || sectionName.includes('project 1')) {
+        const el = document.querySelector('#rb-proj-0 .p-ta');
+        if(el) el.value = newBullets;
+      } else if(sectionName.includes('proj 2') || sectionName.includes('project 2')) {
+        const el = document.querySelector('#rb-proj-1 .p-ta');
+        if(el) el.value = newBullets;
+      } else if(sectionName.includes('achieve')) {
+        const el = document.getElementById('rb-achievements');
+        if(el) el.value = newBullets;
+      }
+    });
+    liveRender();
+    toast('✓ Bullets improved!','ok');
+    logActivity('✨','AI improved resume bullets');
+  } catch(e) { toast(e.message,'err'); }
 }
 
 // ── ONBOARDING (first-run flow) ────────────────────────
