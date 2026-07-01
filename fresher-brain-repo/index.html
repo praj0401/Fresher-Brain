@@ -18,14 +18,6 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
-<!-- Vercel Web Analytics -->
-<script>
-  window.va = window.va || function () { 
-    (window.vaq = window.vaq || []).push(arguments); 
-  };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
-
 <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 :root {
@@ -488,7 +480,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
   @page {
     size: letter;
     margin: 0.5in 0.6in;
+    /* Remove browser print header/footer (date, URL, title) */
+    margin-top: 0.5in;
   }
+  /* Suppress browser-injected headers and footers */
+  html { -webkit-print-color-adjust: exact; }
+  head, header, footer, nav, .topbar, .sidebar { display: none !important; }
 }
 
 /* ── RESUME DOC STYLES (scoped to #resumeDoc) ── */
@@ -1013,7 +1010,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
     <button class="btn" onclick="buildResume()">⚡ Build from Profile</button>
     <button class="btn sec" onclick="improveResume()">✨ AI Improve Bullets</button>
     <button class="btn sec" onclick="printResume()">📥 Download PDF</button>
-    <div style="font-size:11px;color:var(--t3);margin-left:4px;">Print dialog → Save as PDF → set margins to None</div>
+    <button class="btn sec" onclick="exportToLatex()" style="border-color:rgba(0,214,143,0.4);color:var(--green);">📝 Export .tex → Overleaf</button>
+    <div style="font-size:11px;color:var(--t3);">📝 Overleaf: download .tex → upload to <strong style="color:var(--green)">overleaf.com</strong> → compile → perfect PDF</div>
+    <div style="font-size:11px;color:var(--t3);margin-left:4px;">Print dialog → Margins: None → uncheck Headers &amp; Footers → Save as PDF</div>
   </div>
 
   <!-- Two-panel: editor left, preview right -->
@@ -3000,6 +2999,230 @@ function toast(msg,type='ok'){
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600);
 }
 
+function exportToLatex() {
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const esc = s => s
+    .replace(/\\/g,'\\textbackslash{}')
+    .replace(/&/g,'\\&').replace(/%/g,'\\%').replace(/\$/g,'\\$')
+    .replace(/#/g,'\\#').replace(/_/g,'\\_').replace(/\{/g,'\\{').replace(/\}/g,'\\}')
+    .replace(/~/g,'\\textasciitilde{}').replace(/\^/g,'\\textasciicircum{}');
+
+  const name     = g('rb-name')     || 'Your Name';
+  const location = g('rb-location') || 'City, State';
+  const phone    = g('rb-phone')    || '';
+  const email    = g('rb-email')    || '';
+  const linkedin = g('rb-linkedin') || '';
+  const github   = g('rb-github')   || '';
+  const summary  = g('rb-summary')  || '';
+  const college  = g('rb-college')  || '';
+  const eduDate  = g('rb-edu-date') || '';
+  const gpa      = g('rb-gpa')      || '';
+  const langs    = g('rb-langs')    || '';
+  const tools    = g('rb-tools')    || '';
+  const soft     = g('rb-soft')     || '';
+  const other    = g('rb-other')    || '';
+  const exp1Co   = g('rb-exp1-co')  || '';
+  const exp1Date = g('rb-exp1-date')|| '';
+  const exp1Bul  = g('rb-exp1-bullets') || '';
+  const achievements = g('rb-achievements') || '';
+  const certs    = g('rb-certs')    || '';
+  const customTitle = g('rb-custom-title') || '';
+  const customBody  = g('rb-custom-body')  || '';
+
+  // Parse projects
+  const projNames   = document.querySelectorAll('.rb-proj-name');
+  const projBullets = document.querySelectorAll('.rb-proj-bullets');
+
+  // Helper: lines to \resumeItem list
+  const toItems = text => text.split('\n').filter(l=>l.trim())
+    .map(l=>`      \\resumeItem{\\normalsize{${esc(l.trim())}}}`).join('\n');
+
+  // Parse college/degree
+  const [collegeName, collegeDeg] = college.includes('—') ? college.split('—') : [college, ''];
+  const [expCo, expRole] = exp1Co.includes('—') ? exp1Co.split('—') : [exp1Co, ''];
+
+  // Build project blocks
+  let projBlocks = '';
+  projNames.forEach((nameEl, i) => {
+    const pname = nameEl.value.trim();
+    const pbul  = projBullets[i]?.value.trim() || '';
+    if(!pname && !pbul) return;
+    const [ptitle, ptech] = pname.includes('—') ? pname.split('—') : [pname, ''];
+    projBlocks += `
+\\vspace{5pt}
+\\resumeProjectHeading
+  {\\textbf{\\large{${esc(ptitle?.trim()||pname)}}}${ptech?' \\emph{| '+esc(ptech.trim())+'}':''}}{} 
+\\vspace{-5pt}
+\\resumeItemListStart
+${toItems(pbul)}
+\\resumeItemListEnd
+`;
+  });
+
+  // Build skills block
+  let skillsBlock = '';
+  if(langs)  skillsBlock += `  \\item \\textbf{Languages:} ${esc(langs)}\n`;
+  if(tools)  skillsBlock += `  \\item \\textbf{Frameworks \\& Tools:} ${esc(tools)}\n`;
+  if(soft)   skillsBlock += `  \\item \\textbf{Soft Skills:} ${esc(soft)}\n`;
+  if(other)  skillsBlock += `  \\item \\textbf{Other:} ${esc(other)}\n`;
+
+  // Build certs block
+  const certItems = certs.split('\n').filter(l=>l.trim())
+    .map(l=>`  \\item \\normalsize{${esc(l.trim())}}`).join('\n');
+
+  // Build custom section
+  const customItems = customBody.split('\n').filter(l=>l.trim())
+    .map(l=>`  \\item \\normalsize{${esc(l.trim())}}`).join('\n');
+
+  const tex = `\\documentclass[letterpaper,11pt]{article}
+\\usepackage{latexsym}
+\\usepackage[empty]{fullpage}
+\\usepackage{titlesec}
+\\usepackage{marvosym}
+\\usepackage[usenames,dvipsnames]{color}
+\\usepackage{verbatim}
+\\usepackage{enumitem}
+\\usepackage[hidelinks]{hyperref}
+\\usepackage[english]{babel}
+\\usepackage{tabularx}
+\\usepackage{fontawesome5}
+\\usepackage{multicol}
+\\usepackage{graphicx}
+\\setlength{\\multicolsep}{-3.0pt}
+\\setlength{\\columnsep}{-1pt}
+\\input{glyphtounicode}
+
+%------------- PAGE LAYOUT -------------
+\\addtolength{\\oddsidemargin}{-0.6in}
+\\addtolength{\\evensidemargin}{-0.5in}
+\\addtolength{\\textwidth}{1.19in}
+\\addtolength{\\topmargin}{-.7in}
+\\addtolength{\\textheight}{1.4in}
+\\urlstyle{same}
+\\raggedbottom
+\\raggedright
+\\setlength{\\tabcolsep}{0in}
+
+%------------- SECTION FORMATTING -------------
+\\titleformat{\\section}{
+  \\scshape\\raggedright\\large\\bfseries
+}{}{0em}{}[\\color{black}\\titlerule]
+\\titlespacing*{\\section}{0pt}{12pt}{5pt}
+\\pdfgentounicode=1
+
+%------------- LIST SPACING -------------
+\\setlist[itemize]{itemsep=1pt,topsep=2pt,parsep=0pt,partopsep=0pt}
+\\setlength{\\parskip}{1pt}
+\\setlength{\\parsep}{0pt}
+\\setlength{\\topsep}{1pt}
+\\setlength{\\partopsep}{0pt}
+
+%------------- CUSTOM COMMANDS -------------
+\\newcommand{\\resumeItem}[1]{\\item\\small{#1}}
+\\newcommand{\\resumeSubheading}[4]{
+  \\item
+  \\begin{tabular*}{1.0\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
+    \\textbf{\\large#1} & \\textbf{\\small #2} \\\\
+    \\textit{\\large#3} & \\textit{\\small #4} \\\\
+  \\end{tabular*}\\vspace{-2pt}
+}
+\\newcommand{\\resumeProjectHeading}[2]{
+  \\item
+  \\begin{tabular*}{1.0\\textwidth}{l@{\\extracolsep{\\fill}}r}
+    \\small#1 & \\textbf{\\small #2} \\\\
+  \\end{tabular*}\\vspace{-2pt}
+}
+\\newcommand{\\resumeSubHeadingListStart}{\\begin{itemize}[leftmargin=0.0in,label={}]\\setlength\\itemsep{1pt}}
+\\newcommand{\\resumeSubHeadingListEnd}{\\end{itemize}}
+\\newcommand{\\resumeItemListStart}{\\begin{itemize}[leftmargin=0.15in]\\setlength\\itemsep{1pt}}
+\\newcommand{\\resumeItemListEnd}{\\end{itemize}\\vspace{-3pt}}
+\\newcommand\\sbullet[1][.5]{\\mathbin{\\vcenter{\\hbox{\\scalebox{#1}{$\\bullet$}}}}}
+
+\\begin{document}
+
+%----------HEADING----------
+\\begin{center}
+    {\\Huge \\scshape ${esc(name)}} \\\\ \\vspace{1pt}
+    ${esc(location)} \\\\ \\vspace{1pt}
+    \\small
+    ${phone?`\\href{tel:${esc(phone)}}{\\raisebox{-0.1\\height}\\faPhone\\ \\underline{${esc(phone)}}} ~`:''}
+    ${email?`\\href{mailto:${esc(email)}}{\\raisebox{-0.2\\height}\\faEnvelope\\ \\underline{${esc(email)}}} ~`:''}
+    ${linkedin?`\\href{https://${esc(linkedin)}}{\\raisebox{-0.2\\height}\\faLinkedin\\ \\underline{LinkedIn}} ~`:''}
+    ${github?`\\href{https://${esc(github)}}{\\raisebox{-0.2\\height}\\faGithub\\ \\underline{GitHub}}`:''}
+\\end{center}
+
+${summary?`%-----------SUMMARY-----------
+\\section{Summary}
+\\resumeSubHeadingListStart
+    \\resumeItem{\\normalsize{${esc(summary)}}}
+\\resumeSubHeadingListEnd`:''}
+
+%-----------EDUCATION-----------
+\\section{Education}
+\\resumeSubHeadingListStart
+  \\resumeSubheading
+    {${esc(collegeName?.trim()||college)}}{${esc(eduDate)}}
+    {${esc(collegeDeg?.trim()||'')}${gpa?' --- \\textbf{'+esc(gpa)+'}':''}}{${esc(location)}}
+    \\vspace{-5pt}
+\\resumeSubHeadingListEnd
+
+${skillsBlock?`%-----------TECHNICAL SKILLS-----------
+\\section{Technical Skills}
+\\begin{itemize}[leftmargin=0.15in]
+${skillsBlock}\\end{itemize}`:''}
+
+${exp1Co?`%-----------EXPERIENCE-----------
+\\section{Experience}
+\\resumeSubHeadingListStart
+  \\resumeSubheading
+    {${esc(expCo?.trim()||exp1Co)}}{${esc(exp1Date)}}
+    {${esc(expRole?.trim()||'')}}{${esc(location)}}
+    \\resumeItemListStart
+${toItems(exp1Bul)}
+    \\resumeItemListEnd
+\\resumeSubHeadingListEnd`:''}
+
+${projBlocks?`%-----------PROJECTS-----------
+\\section{Projects}
+\\resumeSubHeadingListStart
+${projBlocks}
+\\resumeSubHeadingListEnd`:''}
+
+${achievements?`%-----------ACHIEVEMENTS-----------
+\\section{Achievements \\& Leadership}
+\\resumeSubHeadingListStart
+\\resumeItemListStart
+${toItems(achievements)}
+\\resumeItemListEnd
+\\resumeSubHeadingListEnd`:''}
+
+${certItems?`%-----------CERTIFICATIONS-----------
+\\section{Certifications}
+\\begin{itemize}[leftmargin=0.15in, label={$\\sbullet[.75]$}]
+${certItems}
+\\end{itemize}`:''}
+
+${customTitle&&customItems?`%-----------CUSTOM SECTION-----------
+\\section{${esc(customTitle)}}
+\\begin{itemize}[leftmargin=0.15in, label={$\\sbullet[.75]$}]
+${customItems}
+\\end{itemize}`:''}
+
+\\end{document}`;
+
+  // Download as .tex file
+  const blob = new Blob([tex], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${(name||'resume').replace(/\s+/g,'-').toLowerCase()}-resume.tex`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  toast('✓ .tex downloaded — upload to overleaf.com and compile!','ok');
+  logActivity('📝','Exported resume as LaTeX (.tex) for Overleaf');
+}
+
 // ── RESUME BUILDER ──────────────────────────────────────
 // Replicates Jake's Resume / Overleaf single-column ATS format exactly.
 // Auto-fills from profile, live-renders on every keystroke, print-to-PDF for export.
@@ -3160,7 +3383,6 @@ function liveRender() {
 }
 
 function printResume() {
-  // Wrap the resume in a dedicated print target so @media print can isolate it
   const existing = document.getElementById('printTarget');
   if(existing) existing.remove();
   const clone = document.getElementById('resumeDoc').cloneNode(true);
@@ -3172,9 +3394,13 @@ function printResume() {
   inner.innerHTML = clone.innerHTML;
   wrap.appendChild(inner);
   document.body.appendChild(wrap);
-  window.print();
-  // Clean up after print dialog closes
-  setTimeout(() => { const el = document.getElementById('printTarget'); if(el) el.remove(); }, 2000);
+
+  // Show instructions toast before print dialog opens
+  toast('In print dialog: set Margins → None, uncheck Headers & Footers, Save as PDF','info');
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => { const el = document.getElementById('printTarget'); if(el) el.remove(); }, 2000);
+  }, 800);
 }
 
 async function improveResume() {
