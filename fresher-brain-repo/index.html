@@ -1015,7 +1015,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
     <button class="btn sec" onclick="improveResume()">✨ AI Improve Bullets</button>
     <button class="btn sec" onclick="printResume()">📥 Download PDF</button>
     <button class="btn sec" onclick="exportToLatex()" style="border-color:rgba(0,214,143,0.4);color:var(--green);">📝 Export .tex → Overleaf</button>
-    <div style="font-size:11px;color:var(--t3);">📝 Overleaf: download .tex → upload to <strong style="color:var(--green)">overleaf.com</strong> → compile → perfect PDF</div>
+    <div style="font-size:11px;color:var(--t3);">⚠️ PDF download = image-based, links won't be clickable. For <strong style="color:var(--green)">clickable links</strong> use Export .tex → upload to overleaf.com → compile.</div>
   </div>
 
   <!-- Two-panel: editor left, preview right -->
@@ -3268,13 +3268,24 @@ function buildResume() {
 
   // Parse projects from profile.projects
   if(p.projects) {
-    const projLines = p.projects.split('\n').filter(Boolean);
-    const proj0Name = document.querySelector('#rb-proj-0 .p-inp');
-    const proj0Bullets = document.querySelector('#rb-proj-0 .p-ta');
-    const proj1Name = document.querySelector('#rb-proj-1 .p-inp');
-    const proj1Bullets = document.querySelector('#rb-proj-1 .p-ta');
-    if(proj0Name && !proj0Name.value && projLines[0]) proj0Name.value = projLines[0];
-    if(proj1Name && !proj1Name.value && projLines[1]) proj1Name.value = projLines[1];
+    // Parse projects — each project block starts with a numbered line "1. Name — Tech"
+    // followed by bullet lines starting with spaces or dashes
+    const projBlocks = p.projects.split(/\n(?=\d+\.)/g).filter(Boolean);
+    projBlocks.forEach((block, i) => {
+      const lines = block.split('\n').filter(Boolean);
+      const headerLine = lines[0].replace(/^\d+\.\s*/, '').trim(); // "Name — Tech"
+      const bulletLines = lines.slice(1).map(l => l.replace(/^[-•]\s*/, '').trim()).filter(Boolean);
+      const nameEl  = document.querySelector(`#rb-proj-${i} .rb-proj-name`);
+      const techEl  = document.querySelector(`#rb-proj-${i} .rb-proj-tech`);
+      const bulEl   = document.querySelector(`#rb-proj-${i} .rb-proj-bullets`);
+      if(!nameEl) return;
+      if(!nameEl.value) {
+        const [projName, projTech] = headerLine.includes('—') ? headerLine.split('—') : [headerLine, ''];
+        nameEl.value = projName?.trim() || headerLine;
+        if(techEl && !techEl.value && projTech) techEl.value = projTech.trim();
+      }
+      if(bulEl && !bulEl.value && bulletLines.length) bulEl.value = bulletLines.join('\n');
+    });
   }
 
   liveRender();
