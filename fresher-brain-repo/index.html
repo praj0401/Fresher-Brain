@@ -1067,11 +1067,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
         <div class="card-title">Projects</div>
         <div id="rb-projects-wrap">
           <div class="rb-project" id="rb-proj-0">
-            <div class="p-field"><label class="p-lbl">Project 1 — Name & Tech Stack</label><input class="p-inp" class="rb-proj-name" placeholder="Hire-Stream — React, Node.js, MongoDB, JWT" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Project 1 — Name</label><input class="p-inp rb-proj-name" placeholder="Hire-Stream" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Tech Stack</label><input class="p-inp rb-proj-tech" placeholder="React, Node.js, MongoDB, JWT" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Project URL (GitHub / Live link)</label><input class="p-inp rb-proj-url" placeholder="https://github.com/yourusername/hire-stream" oninput="liveRender()"></div>
             <div class="p-field"><label class="p-lbl">Bullets (one per line)</label><textarea class="p-ta rb-proj-bullets" rows="2" placeholder="Built end-to-end recruitment platform for students, recruiters, and admins&#10;Integrated REST APIs, JWT auth, and cloud storage" oninput="liveRender()"></textarea></div>
           </div>
           <div class="rb-project" id="rb-proj-1" style="margin-top:8px;">
-            <div class="p-field"><label class="p-lbl">Project 2 — Name & Tech Stack</label><input class="p-inp" class="rb-proj-name" placeholder="Food Delivery App — React, Express, MongoDB" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Project 2 — Name</label><input class="p-inp rb-proj-name" placeholder="Food Delivery App" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Tech Stack</label><input class="p-inp rb-proj-tech" placeholder="React, Express, MongoDB" oninput="liveRender()"></div>
+            <div class="p-field"><label class="p-lbl">Project URL (GitHub / Live link)</label><input class="p-inp rb-proj-url" placeholder="https://github.com/yourusername/food-delivery" oninput="liveRender()"></div>
             <div class="p-field"><label class="p-lbl">Bullets (one per line)</label><textarea class="p-ta rb-proj-bullets" rows="2" placeholder="Real-time order tracking, admin dashboard, cart management&#10;MVC architecture with RESTful APIs for scalability" oninput="liveRender()"></textarea></div>
           </div>
         </div>
@@ -3046,15 +3050,22 @@ function exportToLatex() {
 
   // Build project blocks
   let projBlocks = '';
+  const projUrlsLatex  = document.querySelectorAll('.rb-proj-url');
+  const projTechsLatex = document.querySelectorAll('.rb-proj-tech');
   projNames.forEach((nameEl, i) => {
     const pname = nameEl.value.trim();
+    const ptech = projTechsLatex[i]?.value.trim() || '';
     const pbul  = projBullets[i]?.value.trim() || '';
+    const purl  = projUrlsLatex[i]?.value.trim() || '';
     if(!pname && !pbul) return;
-    const [ptitle, ptech] = pname.includes('—') ? pname.split('—') : [pname, ''];
+    const normalizedUrl = purl ? (purl.startsWith('http')?purl:'https://'+purl) : '';
+    const titleLatex = normalizedUrl
+      ? `\\href{${normalizedUrl}}{\\textbf{\\large{${esc(pname)}}}} \\href{${normalizedUrl}}{$\\nearrow$}`
+      : `\\textbf{\\large{${esc(pname)}}}`;
     projBlocks += `
 \\vspace{5pt}
 \\resumeProjectHeading
-  {\\textbf{\\large{${esc(ptitle?.trim()||pname)}}}${ptech?' \\emph{| '+esc(ptech.trim())+'}':''}}{} 
+  {${titleLatex}${ptech?' \\emph{| '+esc(ptech)+'}':{}}}{} 
 \\vspace{-5pt}
 \\resumeItemListStart
 ${toItems(pbul)}
@@ -3301,12 +3312,15 @@ function liveRender() {
   const bullets = text => text.split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('');
   const skillRow = (label, val) => val ? `<div class="r-skills-row"><b>${esc(label)}:</b> ${esc(val)}</div>` : '';
 
+  // Normalize URLs — strip any existing protocol so we control it
+  const toUrl = s => s ? (s.startsWith('http')?s:'https://'+s) : '';
+
   // Contact line — masked labels like the LaTeX template
   const contactParts = [];
   if(phone)    contactParts.push(`<a href="tel:${esc(phone)}">${esc(phone)}</a>`);
   if(email)    contactParts.push(`<a href="mailto:${esc(email)}">${esc(email)}</a>`);
-  if(linkedin) contactParts.push(`<a href="https://${esc(linkedin)}" target="_blank">LinkedIn</a>`);
-  if(github)   contactParts.push(`<a href="https://${esc(github)}" target="_blank">GitHub</a>`);
+  if(linkedin) contactParts.push(`<a href="${esc(toUrl(linkedin))}" target="_blank">LinkedIn</a>`);
+  if(github)   contactParts.push(`<a href="${esc(toUrl(github))}" target="_blank">GitHub</a>`);
 
   let html = '';
 
@@ -3349,17 +3363,27 @@ function liveRender() {
 
   // Projects
   const projSections = [];
+  const projUrls  = document.querySelectorAll('.rb-proj-url');
+  const projTechs = document.querySelectorAll('.rb-proj-tech');
   projNames.forEach((nameEl, i) => {
     const pname = nameEl.value.trim();
-    const pbul = projBullets[i]?.value.trim() || '';
-    if(pname || pbul) {
-      const [title, tech] = pname.includes('—') ? pname.split('—') : [pname, ''];
-      projSections.push(`<div class="r-row"><span class="r-proj-title">${esc(title?.trim()||pname)}${tech?' <span style="font-weight:400;font-style:italic;">| '+esc(tech.trim())+'</span>':''}</span></div>${pbul?'<ul>'+bullets(pbul)+'</ul>':''}`);
-    }
+    const ptech = projTechs[i]?.value.trim() || '';
+    const pbul  = projBullets[i]?.value.trim() || '';
+    const purl  = projUrls[i]?.value.trim() || '';
+    if(!pname && !pbul) return;
+    const normalizedUrl = purl ? (purl.startsWith('http') ? purl : 'https://'+purl) : '';
+    const titleHtml = normalizedUrl
+      ? `<a href="${esc(normalizedUrl)}" target="_blank" style="color:#000;text-decoration:underline;font-weight:700;">${esc(pname)}</a><a href="${esc(normalizedUrl)}" target="_blank" style="color:#555;text-decoration:none;font-size:9pt;"> ↗</a>`
+      : `<strong>${esc(pname)}</strong>`;
+    const techHtml = ptech ? ` <span style="font-weight:400;font-style:normal;font-size:10pt;">| ${esc(ptech)}</span>` : '';
+    projSections.push(`
+      <div class="r-proj-title">${titleHtml}${techHtml}</div>
+      ${pbul?'<ul>'+bullets(pbul)+'</ul>':''}
+    `);
   });
   if(projSections.length) {
     html += `<div class="r-section">Projects</div>`;
-    html += projSections.join('<div style="height:4px;"></div>');
+    html += projSections.join('<div style="height:5px;"></div>');
   }
 
   // Achievements
