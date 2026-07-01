@@ -18,6 +18,10 @@
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 
+<!-- html2canvas + jsPDF for direct PDF download — no print dialog, no browser headers/footers -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 :root {
@@ -1012,7 +1016,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);display
     <button class="btn sec" onclick="printResume()">📥 Download PDF</button>
     <button class="btn sec" onclick="exportToLatex()" style="border-color:rgba(0,214,143,0.4);color:var(--green);">📝 Export .tex → Overleaf</button>
     <div style="font-size:11px;color:var(--t3);">📝 Overleaf: download .tex → upload to <strong style="color:var(--green)">overleaf.com</strong> → compile → perfect PDF</div>
-    <div style="font-size:11px;color:var(--t3);margin-left:4px;">Print dialog → Margins: None → uncheck Headers &amp; Footers → Save as PDF</div>
   </div>
 
   <!-- Two-panel: editor left, preview right -->
@@ -3298,12 +3301,12 @@ function liveRender() {
   const bullets = text => text.split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('');
   const skillRow = (label, val) => val ? `<div class="r-skills-row"><b>${esc(label)}:</b> ${esc(val)}</div>` : '';
 
-  // Contact line
+  // Contact line — masked labels like the LaTeX template
   const contactParts = [];
   if(phone)    contactParts.push(`<a href="tel:${esc(phone)}">${esc(phone)}</a>`);
   if(email)    contactParts.push(`<a href="mailto:${esc(email)}">${esc(email)}</a>`);
-  if(linkedin) contactParts.push(`<a href="https://${esc(linkedin)}" target="_blank">${esc(linkedin)}</a>`);
-  if(github)   contactParts.push(`<a href="https://${esc(github)}" target="_blank">${esc(github)}</a>`);
+  if(linkedin) contactParts.push(`<a href="https://${esc(linkedin)}" target="_blank">LinkedIn</a>`);
+  if(github)   contactParts.push(`<a href="https://${esc(github)}" target="_blank">GitHub</a>`);
 
   let html = '';
 
@@ -3382,25 +3385,65 @@ function liveRender() {
   document.getElementById('resumeDoc').innerHTML = html;
 }
 
-function printResume() {
-  const existing = document.getElementById('printTarget');
-  if(existing) existing.remove();
-  const clone = document.getElementById('resumeDoc').cloneNode(true);
-  const wrap = document.createElement('div');
-  wrap.id = 'printTarget';
-  wrap.style.cssText = 'display:none;background:#fff;';
-  const inner = document.createElement('div');
-  inner.id = 'resumeDoc';
-  inner.innerHTML = clone.innerHTML;
-  wrap.appendChild(inner);
-  document.body.appendChild(wrap);
+async function printResume() {
+  const el = document.getElementById('resumeDoc');
+  if(!el || !el.innerHTML.trim()) { toast('Build your resume first','err'); return; }
 
-  // Show instructions toast before print dialog opens
-  toast('In print dialog: set Margins → None, uncheck Headers & Footers, Save as PDF','info');
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => { const el = document.getElementById('printTarget'); if(el) el.remove(); }, 2000);
-  }, 800);
+  // Check libraries loaded
+  if(typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+    toast('PDF library loading — try again in 2 seconds','err'); return;
+  }
+
+  toast('📄 Generating PDF…','info');
+  const btn = document.querySelector('[onclick="printResume()"]');
+  if(btn) { btn.disabled = true; btn.textContent = '⏳ Generating…'; }
+
+  try {
+    // Temporarily make the resume full-width in white for capture
+    const prevStyle = el.style.cssText;
+    el.style.cssText = 'font-family:Times New Roman,Times,serif;font-size:11pt;color:#000;background:#fff;padding:28px 32px;line-height:1.35;width:794px;box-sizing:border-box;';
+
+    const canvas = await html2canvas(el, {
+      scale: 2,          // 2x for crisp text
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 794,        // A4 width at 96dpi
+      windowWidth: 794,
+    });
+
+    el.style.cssText = prevStyle; // restore
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'pt', format:'letter' });
+
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW  = pageW;
+    const imgH  = (canvas.height * imgW) / canvas.width;
+
+    // Handle multi-page if resume is long
+    let yPos = 0;
+    while(yPos < imgH) {
+      if(yPos > 0) pdf.addPage();
+      pdf.addImage(
+        canvas.toDataURL('image/png'), 'PNG',
+        0, -yPos, imgW, imgH,
+        '', 'FAST'
+      );
+      yPos += pageH;
+    }
+
+    const name = (document.getElementById('rb-name')?.value || 'resume').replace(/\s+/g,'-').toLowerCase();
+    pdf.save(`${name}-resume.pdf`);
+    toast('✓ Resume downloaded!','ok');
+    logActivity('📄','Downloaded resume as PDF');
+  } catch(e) {
+    toast('PDF generation failed — try the Print button instead','err');
+    console.error(e);
+  } finally {
+    if(btn) { btn.disabled = false; btn.textContent = '📥 Download PDF'; }
+  }
 }
 
 async function improveResume() {
